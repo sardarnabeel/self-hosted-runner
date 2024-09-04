@@ -8,20 +8,28 @@ on:
 jobs:
   update-apache:
     runs-on: self-hosted
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
-      
+
       - name: Update Apache Configuration
         run: |
+          echo "Updating Apache server with the latest changes."
+          # Copy updated files to the Apache web directory
           sudo cp -r /home/ubuntu/actions-runner/index.html /var/www/html/index.html
+          # Restart Apache to apply changes
           sudo systemctl restart apache2
         shell: bash
 
-      - name: Cleanup and Terminate Runner
+      - name: Cleanup Runner
         run: |
-          echo "Runner will be terminated."
+          echo "Cleaning up the runner."
           cd /home/ubuntu/actions-runner
-          sudo ./svc.sh uninstall
-          sudo shutdown now
+          # Stop and uninstall the runner service
+          sudo ./svc.sh stop || true
+          sudo ./svc.sh uninstall || true
+          # Remove runner files
+          sudo rm -rf /home/ubuntu/actions-runner
+          echo "Runner has been cleaned up."
         shell: bash
