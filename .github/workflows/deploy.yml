@@ -21,6 +21,6 @@ jobs:
       - name: Cleanup and Terminate Runner
         run: |
           echo "Runner will be terminated."
-          /home/ubuntu/actions-runner/svc.sh uninstall
+          sudo /home/ubuntu/actions-runner/svc.sh uninstall
           sudo shutdown now
         shell: bash
