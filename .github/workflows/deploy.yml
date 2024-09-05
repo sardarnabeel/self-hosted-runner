@@ -29,6 +29,10 @@ jobs:
           ec2_security_group_id: sg-03e43edc9e56c0b29
           ec2_instance_ttl: 40                # Optional, default is 60 minutes
           ec2_spot_instance_strategy: None    # Other options: SpotOnly, BestEffort, MaxPerformance
+          github_job_start_ttl_seconds: 0
+          ec2_root_disk_size_gb: 8            # Adjust size if needed
+          ec2_root_disk_ebs_class: gp2
+          ec2_instance_tags: '{}'              # Ensure this is valid JSON
 
   run-build:
     timeout-minutes: 10
