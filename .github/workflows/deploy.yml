@@ -35,4 +35,5 @@ jobs:
           # # Remove runner files
           # sudo rm -rf /home/ubuntu/actions-runner
           # echo "Runner has been cleaned up."
-        shell: bash
+        # shell: bash
+        shell: /usr/bin/bash --noprofile --norc -e -o pipefail
