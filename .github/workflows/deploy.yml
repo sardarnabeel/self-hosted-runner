@@ -29,7 +29,8 @@ jobs:
           echo "Cleaning up the runner."
           cd /home/ubuntu/actions-runner
           # Stop and uninstall the runner service
-          sudo ./svc.sh stop || true
+          # sudo ./svc.sh stop || true
+          sudo ./svc.sh stop
           # sudo ./svc.sh uninstall || true
           # # Remove runner files
           # sudo rm -rf /home/ubuntu/actions-runner
