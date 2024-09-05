@@ -30,10 +30,9 @@ jobs:
           cd /home/ubuntu/actions-runner
           # Stop and uninstall the runner service
           # sudo ./svc.sh stop || true
-          sudo ./svc.sh stop
+          sudo ./svc.sh stop || true
           # sudo ./svc.sh uninstall || true
           # # Remove runner files
           # sudo rm -rf /home/ubuntu/actions-runner
           # echo "Runner has been cleaned up."
-        # shell: bash
-        shell: /usr/bin/bash --noprofile --norc -e -o pipefail
+        shell: bash
