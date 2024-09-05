@@ -28,7 +28,8 @@ jobs:
           # ec2_subnet_id: ${{ secrets.EC2_SUBNET_ID }}
         
           ec2_subnet_id: subnet-0f44bc299c39f8fff
-          ec2_security_group_id: ${{ secrets.EC2_SECURITY_GROUP_ID }}
+          # ec2_security_group_id: ${{ secrets.EC2_SECURITY_GROUP_ID }}
+          ec2_security_group_id: sg-03e43edc9e56c0b29
           ec2_instance_ttl: 40
           ec2_spot_instance_strategy: None
           github_job_start_ttl_seconds: 0
