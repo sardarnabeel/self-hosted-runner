@@ -41,16 +41,16 @@ jobs:
   #   steps:
   #     - name: Hello World
   #       run: echo 'Hello World!'
-    do-the-job:
-      timeout-minutes: 10
-      needs: start-runner
+  do-the-job:
+     timeout-minutes: 10
+     needs: start-runner
       # runs-on: ${{ github.run_id }}  
-      runs-on: ${{ needs.start-runner.outputs.label }} # run the job on the newly created runner
-      steps:
-        - name: Checkout Code
-          uses: actions/checkout@v3
+     runs-on: ${{ needs.start-runner.outputs.label }} # run the job on the newly created runner
+     steps:
+        # - name: Checkout Code
+        #   uses: actions/checkout@v3
 
-        - name: Copy index.html to Apache Web Directory
+       - name: Copy index.html to Apache Web Directory
           env:
           APACHE_SERVER_IP: ${{ secrets.APACHE_SERVER_IP }}  # Apache server IP
           SSH_KEY_PATH: ${{ secrets.SSH_KEY_PATH }}           # Path to the PEM key
