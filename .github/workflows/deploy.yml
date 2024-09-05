@@ -47,13 +47,13 @@ jobs:
       # runs-on: ${{ github.run_id }}  
      runs-on: ${{ needs.start-runner.outputs.label }} # run the job on the newly created runner
      steps:
-        # - name: Checkout Code
-        #   uses: actions/checkout@v3
+        - name: Checkout Code
+          uses: actions/checkout@v3
 
-       - name: Copy index.html to Apache Web Directory
-         env:
-          APACHE_SERVER_IP: ${{ secrets.APACHE_SERVER_IP }}  # Apache server IP
-          SSH_KEY_PATH: ${{ secrets.SSH_KEY_PATH }}           # Path to the PEM key
+        - name: Copy index.html to Apache Web Directory
+          env:
+           APACHE_SERVER_IP: ${{ secrets.APACHE_SERVER_IP }}  # Apache server IP
+           SSH_KEY_PATH: ${{ secrets.SSH_KEY_PATH }}           # Path to the PEM key
           run: |
            echo "Copying index.html to Apache server."
            scp -o StrictHostKeyChecking=no -i $SSH_KEY_PATH /home/ubuntu/actions-runner/index.html ubuntu@$APACHE_SERVER_IP:/home/ubuntu/
