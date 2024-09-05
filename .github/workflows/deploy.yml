@@ -1,6 +1,4 @@
-
-
-name: Deploy Apache Update
+name: Deploy Apache Update via Self-Hosted Runner
 
 on:
   push:
@@ -8,31 +6,101 @@ on:
       - main
 
 jobs:
-  update-apache:
-    runs-on: self-hosted
+  start-runner:
+    timeout-minutes: 5
+    name: Start self-hosted EC2 runner   
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write        
+    steps:      
+      - name: Start EC2 runner
+        id: start-ec2-runner
+        uses: NextChapterSoftware/ec2-action-builder@v1.7
+        with:
+          github_token: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
+          aws_access_key_id: ${{ secrets.DEPLOY_AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.DEPLOY_AWS_SECRET_ACCESS_KEY }}
+          aws_region: "us-west-2"
+          ec2_instance_type: t2.micro
+          ec2_ami_id: ami-0d53d72369335a9d6
+          # ec2_subnet_id: ${{ secrets.EC2_SUBNET_ID }}
+          ec2_subnet_id: subnet-0f44bc299c39f8fff
+          # ec2_security_group_id: ${{ secrets.EC2_SECURITY_GROUP_ID }}
+          ec2_security_group_id: sg-03e43edc9e56c0b29
+          ec2_instance_ttl: 40                # Optional, default is 60 minutes
+          ec2_spot_instance_strategy: None    # Other options: SpotOnly, BestEffort, MaxPerformance
 
+  run-build:
+    timeout-minutes: 10
+    needs: start-runner
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Update Apache Configuration
+      - name: Copy index.html to Apache Web Directory
+        env:
+          APACHE_SERVER_IP: ${{ secrets.APACHE_SERVER_IP }}  # Apache server IP
+          SSH_KEY_PATH: ${{ secrets.SSH_KEY_PATH }}           # Path to the PEM key
         run: |
-          echo "Updating Apache server with the latest changes."
-          # Copy updated files to the Apache web directory
-          sudo cp -r /home/ubuntu/actions-runner/index.html /var/www/html/index.html
-          # Restart Apache to apply changes
-          sudo systemctl restart apache2
-        shell: bash
+          echo "Copying index.html to Apache server."
+          scp -o StrictHostKeyChecking=no -i $SSH_KEY_PATH /home/ubuntu/actions-runner/index.html ubuntu@$APACHE_SERVER_IP:/home/ubuntu/
+          ssh -o StrictHostKeyChecking=no -i $SSH_KEY_PATH ubuntu@$APACHE_SERVER_IP << 'EOF'
+            sudo cp /home/ubuntu/index.html /var/www/html/index.html
+            sudo systemctl restart apache2
+          EOF
 
-      - name: Cleanup Runner
+      - name: Clean Up Runner and Terminate EC2 Instance
+        env:
+          EC2_INSTANCE_ID: ${{ steps.start-ec2-runner.outputs.instance_id }}
+          SSH_KEY_PATH: ${{ secrets.SSH_KEY_PATH }}           # Path to the PEM key
         run: |
-          echo "Cleaning up the runner."
-          cd /home/ubuntu/actions-runner
-          # Stop and uninstall the runner service
-          # sudo ./svc.sh stop || true
-          sudo ./svc.sh stop || true
-          # sudo ./svc.sh uninstall || true
-          # # Remove runner files
-          # sudo rm -rf /home/ubuntu/actions-runner
-          # echo "Runner has been cleaned up."
-        shell: bash
+          echo "Stopping and terminating the EC2 runner instance."
+          # Stop the self-hosted runner
+          ssh -o StrictHostKeyChecking=no -i $SSH_KEY_PATH ubuntu@${{ steps.start-ec2-runner.outputs.instance_ip }} << 'EOF'
+            sudo ./svc.sh stop || true
+            sudo ./svc.sh uninstall || true
+            sudo rm -rf /home/ubuntu/actions-runner || true
+          EOF
+          
+          # Terminate the EC2 instance
+          aws ec2 terminate-instances --instance-ids $EC2_INSTANCE_ID
+          aws ec2 wait instance-terminated --instance-ids $EC2_INSTANCE_ID
+
+
+# name: Deploy Apache Update
+
+# on:
+#   push:
+#     branches:
+#       - main
+
+# jobs:
+#   update-apache:
+#     runs-on: self-hosted
+
+#     steps:
+#       - name: Checkout Code
+#         uses: actions/checkout@v3
+
+#       - name: Update Apache Configuration
+#         run: |
+#           echo "Updating Apache server with the latest changes."
+#           # Copy updated files to the Apache web directory
+#           sudo cp -r /home/ubuntu/actions-runner/index.html /var/www/html/index.html
+#           # Restart Apache to apply changes
+#           sudo systemctl restart apache2
+#         shell: bash
+
+#       - name: Cleanup Runner
+#         run: |
+#           echo "Cleaning up the runner."
+#           cd /home/ubuntu/actions-runner
+#           # Stop and uninstall the runner service
+#           # sudo ./svc.sh stop || true
+#           sudo ./svc.sh stop || true
+#           # sudo ./svc.sh uninstall || true
+#           # # Remove runner files
+#           # sudo rm -rf /home/ubuntu/actions-runner
+#           # echo "Runner has been cleaned up."
+#         shell: bash
