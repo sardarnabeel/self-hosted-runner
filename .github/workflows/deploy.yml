@@ -56,9 +56,10 @@ jobs:
            SSH_KEY_PATH: ${{ secrets.SSH_KEY_PATH }}           # Path to the PEM key
           run: |
            echo "Copying index.html to Apache server."
-           scp -o StrictHostKeyChecking=no -i $SSH_KEY_PATH /home/ubuntu/actions-runner/index.html ubuntu@$APACHE_SERVER_IP:/home/ubuntu/
+           # scp -o StrictHostKeyChecking=no -i $SSH_KEY_PATH /home/ubuntu/actions-runner/index.html ubuntu@$APACHE_SERVER_IP:/home/ubuntu/
            ssh -o StrictHostKeyChecking=no -i $SSH_KEY_PATH ubuntu@$APACHE_SERVER_IP << 'EOF'
-             sudo cp /home/ubuntu/index.html /var/www/html/index.html
+           # ssh -o StrictHostKeyChecking=no -i $SSH_KEY_PATH ubuntu@$APACHE_SERVER_IP << 'EOF'
+             sudo cp /home/ubuntu/actions-runner/index.html /var/www/html/index.html 
              sudo systemctl restart apache2
            EOF
 
