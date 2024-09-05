@@ -7,37 +7,38 @@ on:
 
 jobs:
   start-runner:
-    timeout-minutes: 5
-    name: Start self-hosted EC2 runner   
+    timeout-minutes: 10
+    name: Start self-hosted EC2 runner
     runs-on: ubuntu-latest
-    permissions:
-      actions: write        
-    steps:      
-      - name: Start EC2 runner
+    steps:
+      - name: Deploy EC2 self-hosted runner
         id: start-ec2-runner
-        uses: NextChapterSoftware/ec2-action-builder@v1.7
+        uses: your-org/deploy-ec2-runner-action@v1.0
         with:
-          github_token: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
-          aws_access_key_id: ${{ secrets.DEPLOY_AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.DEPLOY_AWS_SECRET_ACCESS_KEY }}
-          aws_region: "us-west-2"
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_session_token: ${{ secrets.AWS_SESSION_TOKEN }}  # Optional
+          aws_region: 'us-west-2'
+          aws_iam_role_arn: ${{ secrets.AWS_IAM_ROLE_ARN }}  # Optional
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_action_runner_version: 'latest'  # Optional
+          github_action_runner_extra_cli_args: '--some-arg'  # Optional
           ec2_instance_type: t2.micro
           ec2_ami_id: ami-0d53d72369335a9d6
           # ec2_subnet_id: ${{ secrets.EC2_SUBNET_ID }}
           ec2_subnet_id: subnet-0f44bc299c39f8fff
-          # ec2_security_group_id: ${{ secrets.EC2_SECURITY_GROUP_ID }}
-          ec2_security_group_id: sg-03e43edc9e56c0b29
-          ec2_instance_ttl: 40                # Optional, default is 60 minutes
-          ec2_spot_instance_strategy: None    # Other options: SpotOnly, BestEffort, MaxPerformance
+          ec2_security_group_id: ${{ secrets.EC2_SECURITY_GROUP_ID }}
+          ec2_instance_ttl: 40
+          ec2_spot_instance_strategy: None
           github_job_start_ttl_seconds: 0
-          ec2_root_disk_size_gb: 8            # Adjust size if needed
+          ec2_root_disk_size_gb: 8
           ec2_root_disk_ebs_class: gp2
-          ec2_instance_tags: '{}'              # Ensure this is valid JSON
+          ec2_instance_tags: '{"Name": "self-hosted-runner"}'
 
   run-build:
     timeout-minutes: 10
     needs: start-runner
-    runs-on: ubuntu-latest
+    runs-on: ${{ steps.start-ec2-runner.outputs.instance_ip }}  # Use the IP address of the EC2 instance
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
@@ -70,6 +71,7 @@ jobs:
           # Terminate the EC2 instance
           aws ec2 terminate-instances --instance-ids $EC2_INSTANCE_ID
           aws ec2 wait instance-terminated --instance-ids $EC2_INSTANCE_ID
+
 
 
 # name: Deploy Apache Update
