@@ -41,7 +41,7 @@ jobs:
   #   steps:
   #     - name: Hello World
   #       run: echo 'Hello World!'
-    run-build:
+    do-the-job:
       timeout-minutes: 10
       needs: start-runner
       # runs-on: ${{ github.run_id }}  
