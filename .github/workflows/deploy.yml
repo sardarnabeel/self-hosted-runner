@@ -33,7 +33,7 @@ jobs:
           github_job_start_ttl_seconds: 0
           ec2_root_disk_size_gb: 8
           ec2_root_disk_ebs_class: gp2
-          ec2_instance_tags: '{"Name": "self-hosted-runner"}'
+          # ec2_instance_tags: '{"Name": "self-hosted-runner"}'
 
   run-build:
     timeout-minutes: 10
