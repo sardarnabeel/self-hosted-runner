@@ -18,7 +18,7 @@ jobs:
           aws_access_key_id: ${{ secrets.DEPLOY_AWS_ACCESS_KEY_ID }}
           aws_secret_access_key: ${{ secrets.DEPLOY_AWS_SECRET_ACCESS_KEY }}
           # aws_session_token: ${{ secrets.AWS_SESSION_TOKEN }}  # Optional
-          aws_region: 'us-west-2'
+          aws_region: 'us-west-1'
           # aws_iam_role_arn: ${{ secrets.AWS_IAM_ROLE_ARN }}  # Optional
           github_token: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
           github_action_runner_version: 'latest'  # Optional
