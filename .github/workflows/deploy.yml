@@ -43,8 +43,8 @@ jobs:
   run-build:
     timeout-minutes: 10
     needs: start-runner
-    runs-on: ${{ github.run_id }}  
-    # runs-on: [self-hosted, linux]  # Use the IP address of the EC2 instance
+    # runs-on: ${{ github.run_id }}  
+    runs-on: [self-hosted, linux]  # Use the IP address of the EC2 instance
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
