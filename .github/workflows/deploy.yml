@@ -1,82 +1,145 @@
-name: Deploy Apache Update via Self-Hosted Runner
-
-on:
-  push:
-    branches:
-      - main
-
+name: do-the-job
+on: pull_request
 jobs:
   start-runner:
-    timeout-minutes: 10
     name: Start self-hosted EC2 runner
     runs-on: ubuntu-latest
+    outputs:
+      label: ${{ steps.start-ec2-runner.outputs.label }}
+      ec2-instance-id: ${{ steps.start-ec2-runner.outputs.ec2-instance-id }}
     steps:
-      - name: Deploy EC2 self-hosted runner
-        id: start-ec2-runner
-        uses: NextChapterSoftware/ec2-action-builder@v1.7
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws_access_key_id: ${{ secrets.DEPLOY_AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.DEPLOY_AWS_SECRET_ACCESS_KEY }}
-          # aws_session_token: ${{ secrets.AWS_SESSION_TOKEN }}  # Optional
-          aws_region: 'us-west-1'
-          # aws_iam_role_arn: ${{ secrets.AWS_IAM_ROLE_ARN }}  # Optional
-          github_token: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
-          github_action_runner_version: 'latest'  # Optional
-          # github_action_runner_extra_cli_args: '--some-arg'  # Optional
-          ec2_instance_type: t2.micro
-          ec2_ami_id: ami-0d53d72369335a9d6
-          # ec2_subnet_id: ${{ secrets.EC2_SUBNET_ID }}
-        
-          ec2_subnet_id: subnet-0f44bc299c39f8fff
-          # ec2_security_group_id: ${{ secrets.EC2_SECURITY_GROUP_ID }}
-          ec2_security_group_id: sg-03e43edc9e56c0b29
-          ec2_instance_ttl: 40
-          ec2_spot_instance_strategy: None
-          github_job_start_ttl_seconds: 0
-          ec2_root_disk_size_gb: 8
-          ec2_root_disk_ebs_class: gp2
-          ec2_instance_tags: >                          # Required for IAM role resource permission scoping
-                [
-                  {"Key": "Owner", "Value": "deploybot"}
-                ]
-
-  run-build:
-    timeout-minutes: 10
-    needs: start-runner
-    # runs-on: ${{ github.run_id }}  
-    runs-on: [self-hosted, linux]  # Use the IP address of the EC2 instance
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - name: Start EC2 runner
+        id: start-ec2-runner
+        uses: machulav/ec2-github-runner@v2
+        with:
+          mode: start
+          github-token: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
+          ec2-image-id: ami-123 # Replace with your preferred Ubuntu AMI ID
+          ec2-instance-type: t3.nano
+          subnet-id: subnet-123 # Replace with your subnet ID
+          security-group-id: sg-123 # Replace with your security group ID
+          iam-role-name: my-role-name # optional, requires additional permissions
+          aws-resource-tags: > # optional, requires additional permissions
+            [
+              {"Key": "Name", "Value": "ec2-github-runner"},
+              {"Key": "GitHubRepository", "Value": "${{ github.repository }}"}
+            ]
+  
+  do-the-job:
+    name: Do the job on the runner
+    needs: start-runner # required to start the main job when the runner is ready
+    runs-on: ${{ needs.start-runner.outputs.label }} # run the job on the newly created runner
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
+      - name: Hello World
+        run: echo 'Hello World!'
+  
+  stop-runner:
+    name: Stop self-hosted EC2 runner
+    needs:
+      - start-runner # required to get output from the start-runner job
+      - do-the-job # required to wait when the main job is done
+    runs-on: ubuntu-latest
+    if: ${{ always() }} # required to stop the runner even if the error happened in the previous jobs
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - name: Stop EC2 runner
+        uses: machulav/ec2-github-runner@v2
+        with:
+          mode: stop
+          github-token: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
+          label: ${{ needs.start-runner.outputs.label }}
+          ec2-instance-id: ${{ needs.start-runner.outputs.ec2-instance-id }}
 
-      - name: Copy index.html to Apache Web Directory
-        env:
-          APACHE_SERVER_IP: ${{ secrets.APACHE_SERVER_IP }}  # Apache server IP
-          SSH_KEY_PATH: ${{ secrets.SSH_KEY_PATH }}           # Path to the PEM key
-        run: |
-          echo "Copying index.html to Apache server."
-          scp -o StrictHostKeyChecking=no -i $SSH_KEY_PATH /home/ubuntu/actions-runner/index.html ubuntu@$APACHE_SERVER_IP:/home/ubuntu/
-          ssh -o StrictHostKeyChecking=no -i $SSH_KEY_PATH ubuntu@$APACHE_SERVER_IP << 'EOF'
-            sudo cp /home/ubuntu/index.html /var/www/html/index.html
-            sudo systemctl restart apache2
-          EOF
+# name: Deploy Apache Update via Self-Hosted Runner
 
-      - name: Clean Up Runner and Terminate EC2 Instance
-        env:
-          EC2_INSTANCE_ID: ${{ steps.start-ec2-runner.outputs.instance_id }}
-          SSH_KEY_PATH: ${{ secrets.SSH_KEY_PATH }}           # Path to the PEM key
-        run: |
-          echo "Stopping and terminating the EC2 runner instance."
-          # Stop the self-hosted runner
-          ssh -o StrictHostKeyChecking=no -i $SSH_KEY_PATH ubuntu@${{ steps.start-ec2-runner.outputs.instance_ip }} << 'EOF'
-            sudo ./svc.sh stop || true
-            sudo ./svc.sh uninstall || true
-            sudo rm -rf /home/ubuntu/actions-runner || true
-          EOF
+# on:
+#   push:
+#     branches:
+#       - main
+
+# jobs:
+#   start-runner:
+#     timeout-minutes: 10
+#     name: Start self-hosted EC2 runner
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Deploy EC2 self-hosted runner
+#         id: start-ec2-runner
+#         uses: NextChapterSoftware/ec2-action-builder@v1.7
+#         with:
+#           aws_access_key_id: ${{ secrets.DEPLOY_AWS_ACCESS_KEY_ID }}
+#           aws_secret_access_key: ${{ secrets.DEPLOY_AWS_SECRET_ACCESS_KEY }}
+#           # aws_session_token: ${{ secrets.AWS_SESSION_TOKEN }}  # Optional
+#           aws_region: 'us-west-1'
+#           # aws_iam_role_arn: ${{ secrets.AWS_IAM_ROLE_ARN }}  # Optional
+#           github_token: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
+#           github_action_runner_version: 'latest'  # Optional
+#           # github_action_runner_extra_cli_args: '--some-arg'  # Optional
+#           ec2_instance_type: t2.micro
+#           ec2_ami_id: ami-0d53d72369335a9d6
+#           # ec2_subnet_id: ${{ secrets.EC2_SUBNET_ID }}
+        
+#           ec2_subnet_id: subnet-0f44bc299c39f8fff
+#           # ec2_security_group_id: ${{ secrets.EC2_SECURITY_GROUP_ID }}
+#           ec2_security_group_id: sg-03e43edc9e56c0b29
+#           ec2_instance_ttl: 40
+#           ec2_spot_instance_strategy: None
+#           github_job_start_ttl_seconds: 0
+#           ec2_root_disk_size_gb: 8
+#           ec2_root_disk_ebs_class: gp2
+#           ec2_instance_tags: >                          # Required for IAM role resource permission scoping
+#                 [
+#                   {"Key": "Owner", "Value": "deploybot"}
+#                 ]
+
+#   run-build:
+#     timeout-minutes: 10
+#     needs: start-runner
+#     # runs-on: ${{ github.run_id }}  
+#     runs-on: [self-hosted, linux]  # Use the IP address of the EC2 instance
+#     steps:
+#       - name: Checkout Code
+#         uses: actions/checkout@v3
+
+#       - name: Copy index.html to Apache Web Directory
+#         env:
+#           APACHE_SERVER_IP: ${{ secrets.APACHE_SERVER_IP }}  # Apache server IP
+#           SSH_KEY_PATH: ${{ secrets.SSH_KEY_PATH }}           # Path to the PEM key
+#         run: |
+#           echo "Copying index.html to Apache server."
+#           scp -o StrictHostKeyChecking=no -i $SSH_KEY_PATH /home/ubuntu/actions-runner/index.html ubuntu@$APACHE_SERVER_IP:/home/ubuntu/
+#           ssh -o StrictHostKeyChecking=no -i $SSH_KEY_PATH ubuntu@$APACHE_SERVER_IP << 'EOF'
+#             sudo cp /home/ubuntu/index.html /var/www/html/index.html
+#             sudo systemctl restart apache2
+#           EOF
+
+#       - name: Clean Up Runner and Terminate EC2 Instance
+#         env:
+#           EC2_INSTANCE_ID: ${{ steps.start-ec2-runner.outputs.instance_id }}
+#           SSH_KEY_PATH: ${{ secrets.SSH_KEY_PATH }}           # Path to the PEM key
+#         run: |
+#           echo "Stopping and terminating the EC2 runner instance."
+#           # Stop the self-hosted runner
+#           ssh -o StrictHostKeyChecking=no -i $SSH_KEY_PATH ubuntu@${{ steps.start-ec2-runner.outputs.instance_ip }} << 'EOF'
+#             sudo ./svc.sh stop || true
+#             sudo ./svc.sh uninstall || true
+#             sudo rm -rf /home/ubuntu/actions-runner || true
+#           EOF
           
-          # Terminate the EC2 instance
-          aws ec2 terminate-instances --instance-ids $EC2_INSTANCE_ID
-          aws ec2 wait instance-terminated --instance-ids $EC2_INSTANCE_ID
+#           # Terminate the EC2 instance
+#           aws ec2 terminate-instances --instance-ids $EC2_INSTANCE_ID
+#           aws ec2 wait instance-terminated --instance-ids $EC2_INSTANCE_ID
 
 
 
