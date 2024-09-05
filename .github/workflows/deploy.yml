@@ -51,7 +51,7 @@ jobs:
         #   uses: actions/checkout@v3
 
        - name: Copy index.html to Apache Web Directory
-          env:
+         env:
           APACHE_SERVER_IP: ${{ secrets.APACHE_SERVER_IP }}  # Apache server IP
           SSH_KEY_PATH: ${{ secrets.SSH_KEY_PATH }}           # Path to the PEM key
           run: |
