@@ -38,7 +38,7 @@ jobs:
   run-build:
     timeout-minutes: 10
     needs: start-runner
-    runs-on: ${{ steps.start-ec2-runner.outputs.instance_ip }}  # Use the IP address of the EC2 instance
+    runs-on: [self-hosted, linux]  # Use the IP address of the EC2 instance
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
