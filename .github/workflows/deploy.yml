@@ -15,17 +15,18 @@ jobs:
         id: start-ec2-runner
         uses: NextChapterSoftware/ec2-action-builder@v1.7
         with:
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws_session_token: ${{ secrets.AWS_SESSION_TOKEN }}  # Optional
+          aws_access_key_id: ${{ secrets.DEPLOY_AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.DEPLOY_AWS_SECRET_ACCESS_KEY }}
+          # aws_session_token: ${{ secrets.AWS_SESSION_TOKEN }}  # Optional
           aws_region: 'us-west-2'
-          aws_iam_role_arn: ${{ secrets.AWS_IAM_ROLE_ARN }}  # Optional
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          # aws_iam_role_arn: ${{ secrets.AWS_IAM_ROLE_ARN }}  # Optional
+          github_token: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
           github_action_runner_version: 'latest'  # Optional
-          github_action_runner_extra_cli_args: '--some-arg'  # Optional
+          # github_action_runner_extra_cli_args: '--some-arg'  # Optional
           ec2_instance_type: t2.micro
           ec2_ami_id: ami-0d53d72369335a9d6
           # ec2_subnet_id: ${{ secrets.EC2_SUBNET_ID }}
+        
           ec2_subnet_id: subnet-0f44bc299c39f8fff
           ec2_security_group_id: ${{ secrets.EC2_SECURITY_GROUP_ID }}
           ec2_instance_ttl: 40
