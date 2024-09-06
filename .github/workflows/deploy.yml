@@ -45,24 +45,23 @@ jobs:
   do-the-job:
      timeout-minutes: 10
      needs: start-runner
-      # runs-on: ${{ github.run_id }}  
      runs-on: ${{ needs.start-runner.outputs.label }} # run the job on the newly created runner
      steps:
         - name: Checkout Code
           uses: actions/checkout@v3
 
+        - name: Set up SSH key
+          run: |
+            echo "${{ secrets.SSH_KEY_PATH }}" > key.pem
+            chmod 600 key.pem
+
         - name: Copy index.html to Apache Web Directory
           env:
            APACHE_SERVER_IP: ${{ secrets.APACHE_SERVER_IP }}  # Apache server IP
-           SSH_KEY_PATH: ${{ secrets.SSH_KEY_PATH }}           # Path to the PEM key
           run: |
            echo "Copying index.html to Apache server."
-           # scp -o StrictHostKeyChecking=no -i $SSH_KEY_PATH /home/ubuntu/actions-runner/index.html ubuntu@$APACHE_SERVER_IP:/home/ubuntu/
-           ssh -o StrictHostKeyChecking=no -i ${{ env.SSH_KEY_PATH }} ubuntu@${{ env.APACHE_SERVER_IP }}
-           # ssh -o StrictHostKeyChecking=no -i ${{ env.SSH_KEY_PATH }} ubuntu@${{ env.APACHE_SERVER_IP }}
-             sudo cp /home/ubuntu/actions-runner/index.html /var/www/html/index.html
-             sudo systemctl restart apache2
-           exit;
+           scp -o StrictHostKeyChecking=no -i key.pem /home/ubuntu/actions-runner/index.html ubuntu@${{ env.APACHE_SERVER_IP }}:/home/ubuntu/
+           ssh -o StrictHostKeyChecking=no -i key.pem ubuntu@${{ env.APACHE_SERVER_IP }} 'sudo cp /home/ubuntu/index.html /var/www/html/index.html && sudo systemctl restart apache2'
 
 
   stop-runner:
