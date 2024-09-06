@@ -5,6 +5,7 @@ on:
       - main
 jobs:
   start-runner:
+    timeout-minutes: 10
     name: Start self-hosted EC2 runner
     runs-on: ubuntu-latest
     outputs:
