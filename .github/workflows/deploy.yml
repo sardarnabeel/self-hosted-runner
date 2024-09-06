@@ -1,3 +1,7 @@
+##################################################
+##create Self-hosted runner separately
+##################################################
+
 name: do-the-job
 on:
   push:
@@ -87,6 +91,11 @@ jobs:
           label: ${{ needs.start-runner.outputs.label }}
           ec2-instance-id: ${{ needs.start-runner.outputs.ec2-instance-id }}
 
+
+
+##################################################
+##create Self-hosted runner on same app server
+##################################################
 # name: Deploy Apache Update via Self-Hosted Runner
 
 # on:
