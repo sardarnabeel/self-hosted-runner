@@ -60,8 +60,9 @@ jobs:
            APACHE_SERVER_IP: ${{ secrets.APACHE_SERVER_IP }}  # Apache server IP
           run: |
            echo "Copying index.html to Apache server."
-           scp -o StrictHostKeyChecking=no -i key.pem /home/ubuntu/actions-runner/index.html ubuntu@${{ env.APACHE_SERVER_IP }}:/home/ubuntu/
-           ssh -o StrictHostKeyChecking=no -i key.pem ubuntu@${{ env.APACHE_SERVER_IP }} 'sudo cp /home/ubuntu/index.html /var/www/html/index.html && sudo systemctl restart apache2'
+           # scp -o StrictHostKeyChecking=no -i key.pem /home/ubuntu/actions-runner/index.html ubuntu@${{ env.APACHE_SERVER_IP }}:/home/ubuntu/
+           
+           ssh -o StrictHostKeyChecking=no -i key.pem ubuntu@${{ env.APACHE_SERVER_IP }} 'sudo cp /home/ubuntu/actions-runner/index.html /var/www/html/index.html && sudo systemctl restart apache2'
 
 
   stop-runner:
