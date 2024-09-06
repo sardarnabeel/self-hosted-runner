@@ -59,7 +59,7 @@ jobs:
            echo "Copying index.html to Apache server."
            # scp -o StrictHostKeyChecking=no -i $SSH_KEY_PATH /home/ubuntu/actions-runner/index.html ubuntu@$APACHE_SERVER_IP:/home/ubuntu/
            ssh -o StrictHostKeyChecking=no -i $SSH_KEY_PATH ubuntu@$APACHE_SERVER_IP
-           # ssh -o StrictHostKeyChecking=no -i $SSH_KEY_PATH ubuntu@$APACHE_SERVER_IP 
+           # ssh -o StrictHostKeyChecking=no -i ${{ env.SSH_KEY_PATH }} ubuntu@${{ env.APACHE_SERVER_IP }}
              sudo cp /home/ubuntu/actions-runner/index.html /var/www/html/index.html << 'EOF'
              sudo systemctl restart apache2
            EOF
