@@ -1,12 +1,12 @@
 ##################################################
-##create Self-hosted runner separately
+##create Self-hosted runner separately Ref link https://github.com/machulav/ec2-github-runner
 ##################################################
 
 name: do-the-job
 on:
-  push:
-    branches:
-      - main
+  # push:
+  #   branches:
+  #     - main
 jobs:
   start-runner:
     timeout-minutes: 10
