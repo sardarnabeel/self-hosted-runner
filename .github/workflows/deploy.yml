@@ -4,9 +4,10 @@
 
 name: do-the-job
 on:
-  # push:
-  #   branches:
-  #     - main
+  push:
+    workflow_dispatch
+    # branches:
+    #   - main
 jobs:
   start-runner:
     timeout-minutes: 10
